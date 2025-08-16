@@ -45,14 +45,17 @@ def get_cors_origins():
         "http://localhost:5173", 
         "http://127.0.0.1:3000", 
         "http://127.0.0.1:5173",
-        # Vercel domains
-        "https://*.vercel.app",
         # Railway domains
-        "https://*.railway.app",
-        "https://*.up.railway.app",
-        # Your specific Railway domain
         "https://web-production-707fbe.up.railway.app"
     ]
+
+    # Add Vercel domains dynamically
+    vercel_domains = [
+        "https://healthcare-translation-web-app-with-alpha.vercel.app",
+        "https://healthcare-translation-w-git-82bd6e-jarrarshahid-9955s-projects.vercel.app",
+        "https://healthcare-translation-web-app-with-generative-ai-q2bpom0tb.vercel.app"
+    ]
+    default_origins.extend(vercel_domains)
     
     # Add custom origins from environment
     if cors_origins and cors_origins[0]:  # Check if not empty
