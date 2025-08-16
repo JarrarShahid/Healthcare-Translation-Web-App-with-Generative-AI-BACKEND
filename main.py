@@ -71,7 +71,9 @@ app.add_middleware(
         "Authorization", 
         "Accept", 
         "Origin", 
-        "X-Requested-With"
+        "X-Requested-With",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers"
     ],
     expose_headers=["Content-Length", "Content-Type"],
     max_age=3600,  # Cache preflight for 1 hour
@@ -167,7 +169,12 @@ async def cors_test():
 @app.options("/translate")
 async def translate_options():
     """Handle CORS preflight for translate endpoint"""
-    return {"message": "OK"}
+    return {"message": "OK", "status": "preflight_ok"}
+
+@app.options("/{path:path}")
+async def options_handler(path: str):
+    """Handle CORS preflight for all endpoints"""
+    return {"message": "OK", "status": "preflight_ok", "path": path}
 
 @app.post("/translate", response_model=TranslationResponse, responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}})
 async def translate_text(request: TranslationRequest):
