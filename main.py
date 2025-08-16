@@ -25,6 +25,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.on_event("startup")
+async def startup_event():
+    """Run on app startup"""
+    logger.info("🚀 Healthcare Translator API starting up...")
+    logger.info(f"Environment: {os.getenv('ENVIRONMENT', 'development')}")
+    logger.info(f"Port: {os.getenv('PORT', '8000')}")
+    logger.info("✅ App startup complete")
+
 # Add CORS middleware for frontend integration
 app.add_middleware(
     CORSMiddleware,
@@ -103,8 +111,21 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy"}
+    """Health check endpoint for Railway"""
+    try:
+        # Quick check if Groq API key is available
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return {"status": "unhealthy", "error": "GROQ_API_KEY not configured"}
+        
+        return {"status": "healthy", "timestamp": "2024-01-01T00:00:00Z"}
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
+@app.get("/ready")
+async def readiness_check():
+    """Readiness check endpoint for Railway"""
+    return {"status": "ready", "service": "healthcare-translator"}
 
 @app.post("/translate", response_model=TranslationResponse, responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}})
 async def translate_text(request: TranslationRequest):
