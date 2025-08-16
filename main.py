@@ -33,21 +33,48 @@ async def startup_event():
     logger.info(f"Port: {os.getenv('PORT', '8000')}")
     logger.info("✅ App startup complete")
 
-# Add CORS middleware for frontend integration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
+# Configure CORS origins from environment variables
+def get_cors_origins():
+    """Get CORS origins from environment variables or use defaults"""
+    cors_origins = os.getenv("CORS_ORIGINS", "").split(",")
+    
+    # Default origins
+    default_origins = [
+        # Development origins
         "http://localhost:3000", 
         "http://localhost:5173", 
         "http://127.0.0.1:3000", 
         "http://127.0.0.1:5173",
-        # Add Railway domains
+        # Vercel domains
+        "https://*.vercel.app",
+        # Railway domains
         "https://*.railway.app",
-        "https://*.up.railway.app"
-    ],
+        "https://*.up.railway.app",
+        # Your specific Railway domain
+        "https://web-production-707fbe.up.railway.app"
+    ]
+    
+    # Add custom origins from environment
+    if cors_origins and cors_origins[0]:  # Check if not empty
+        default_origins.extend(cors_origins)
+    
+    return default_origins
+
+# Add CORS middleware for frontend integration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=get_cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=[
+        "Content-Type", 
+        "Authorization", 
+        "Accept", 
+        "Origin", 
+        "X-Requested-With"
+    ],
+    expose_headers=["Content-Length", "Content-Type"],
+    max_age=3600,  # Cache preflight for 1 hour
 )
 
 # Pydantic models for request/response
@@ -126,6 +153,21 @@ async def health_check():
 async def readiness_check():
     """Readiness check endpoint for Railway"""
     return {"status": "ready", "service": "healthcare-translator"}
+
+@app.get("/cors-test")
+async def cors_test():
+    """Test endpoint to verify CORS is working"""
+    return {
+        "message": "CORS test successful",
+        "timestamp": "2024-01-01T00:00:00Z",
+        "cors_enabled": True,
+        "allowed_origins": get_cors_origins()
+    }
+
+@app.options("/translate")
+async def translate_options():
+    """Handle CORS preflight for translate endpoint"""
+    return {"message": "OK"}
 
 @app.post("/translate", response_model=TranslationResponse, responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}})
 async def translate_text(request: TranslationRequest):

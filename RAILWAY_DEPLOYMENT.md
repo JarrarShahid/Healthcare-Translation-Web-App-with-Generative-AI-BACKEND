@@ -33,7 +33,10 @@ Ensure your repository contains these files:
    ```
    GROQ_API_KEY=your_actual_groq_api_key_here
    ENVIRONMENT=production
+   CORS_ORIGINS=https://your-app.vercel.app,https://your-custom-domain.com
    ```
+
+**Note**: Replace `https://your-app.vercel.app` with your actual Vercel domain.
 
 ## Step 4: Deploy
 
